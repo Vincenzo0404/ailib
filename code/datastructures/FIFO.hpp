@@ -14,9 +14,11 @@ namespace ailib {
         std::queue<NodePtr> q;
         std::unordered_set<S> present_states;
 
-        void add(NodePtr n) { 
-            q.push(n); 
-            present_states.insert(n->state); 
+        void add(NodePtr n) {
+            if (!present_states.contains(n->state)) {
+                q.push(n); 
+                present_states.insert(n->state); 
+            }
         }
         
         NodePtr top() const { 
@@ -36,11 +38,6 @@ namespace ailib {
             return q.size(); 
         }
         
-        void update(NodePtr n) { 
-            if (!present_states.contains(n->state)) {
-                add(n); 
-            }
-        }
     };
 
 }

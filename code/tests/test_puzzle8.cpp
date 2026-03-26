@@ -2,31 +2,33 @@
 #include <iostream>
 #include <vector>
 
-#include "SolverFactory.hpp"
-#include "policies/SimulatedAnnealingPolicy.hpp"
-#include "policies/SteepestAscentPolicy.hpp"
-#include "problems/NQueens.hpp"
+#include "../SolverFactory.hpp"
+#include "../policies/SimulatedAnnealingPolicy.hpp"
+#include "../policies/SteepestAscentPolicy.hpp"
+#include "../problems/puzzle8.hpp"
 
 int main(int argc, char **argv) {
-  int N;
-  std::cout << "Inserisci la dimensione della scacchiera (N): ";
-  std::cin >> N;
+  std::cout << "8-PUZZLE PROBLEM SOLVER\n";
+  std::cout << "Goal state: 1 2 3 / 4 5 6 / 7 8 0\n";
+  std::cout << "Initial state: 1 5 3 / 8 6 0 / 7 2 4\n\n";
 
-  ailib::NQueens problem(N);
+  ailib::Puzzle8 problem;
 
-  auto fitness = [&problem](const ailib::NQueens::State &state) {
-    return problem.attacks_count(state);
+  // Using Manhattan Distance as heuristic
+  auto fitness = [&problem](const ailib::Puzzle8::State &state) {
+    return -problem.manhattan_distance(state); // Negative because we minimize
   };
 
-  int n_restarts = 30;
+  int n_restarts = 10;
+  int max_iterations = 100;
 
   // ===== FIRST CHOICE HILL CLIMBING =====
   std::cout << "\n" << std::string(50, '=') << "\n";
   std::cout << "1. FIRST CHOICE HILL CLIMBING\n";
   std::cout << std::string(50, '=') << "\n";
 
-  auto fc_solver = ailib::SolverFactory::get_first_choice_hc<ailib::NQueens>(
-      fitness, n_restarts, 50);
+  auto fc_solver = ailib::SolverFactory::get_first_choice_hc<ailib::Puzzle8>(
+      fitness, n_restarts, max_iterations);
 
   auto fc_result = fc_solver.search(problem);
   bool fc_perfect = problem.is_goal(fc_result.best.final_state);
@@ -35,20 +37,21 @@ int main(int argc, char **argv) {
   std::cout << "Punteggio Finale: " << fc_result.best.score << "\n";
   std::cout << "Iterazioni: " << fc_result.total_iterations << "\n";
   std::cout << "Restart: " << fc_result.restarts_executed << "\n";
+  if (fc_perfect) {
+    std::cout << "Soluzione:\n";
+    problem.print_state(fc_result.best.final_state);
+  }
 
   // ===== STEEPEST ASCENT =====
   std::cout << "\n" << std::string(50, '=') << "\n";
   std::cout << "2. STEEPEST ASCENT HILL CLIMBING\n";
   std::cout << std::string(50, '=') << "\n";
 
-  ailib::SteepestAscentPolicy<ailib::NQueens, decltype(fitness)> sa_policy(
+  ailib::SteepestAscentPolicy<ailib::Puzzle8, decltype(fitness)> sa_policy(
       fitness);
-  ailib::IterativeSolver<ailib::NQueens, decltype(sa_policy)> sa_base_solver(
-      sa_policy, 50);
 
-  // Wrap with RestartSolver (with 10 restarts like FirstChoice)
   auto sa_restart_solver =
-      ailib::SolverFactory::create_restarting_solver<ailib::NQueens>(
+      ailib::SolverFactory::create_restarting_solver<ailib::Puzzle8>(
           sa_policy, n_restarts);
 
   auto sa_result = sa_restart_solver.search(problem);
@@ -58,22 +61,25 @@ int main(int argc, char **argv) {
   std::cout << "Punteggio Finale: " << sa_result.best.score << "\n";
   std::cout << "Iterazioni Totali: " << sa_result.total_iterations << "\n";
   std::cout << "Restart: " << sa_result.restarts_executed << "\n";
+  if (sa_perfect) {
+    std::cout << "Soluzione:\n";
+    problem.print_state(sa_result.best.final_state);
+  }
 
   // ===== SIMULATED ANNEALING =====
   std::cout << "\n" << std::string(50, '=') << "\n";
   std::cout << "3. SIMULATED ANNEALING\n";
   std::cout << std::string(50, '=') << "\n";
 
-  // Temperature schedule: exponential cooling
   auto cooling = [](int iteration) {
-    return 100.0 * std::exp(-0.01 * iteration);
+    return 10.0 * std::exp(-0.01 * iteration);
   };
 
-  ailib::SimulatedAnnealingPolicy<ailib::NQueens, decltype(fitness),
+  ailib::SimulatedAnnealingPolicy<ailib::Puzzle8, decltype(fitness),
                                   decltype(cooling)>
       sa_ann_policy(fitness, cooling);
-  ailib::IterativeSolver<ailib::NQueens, decltype(sa_ann_policy)> sa_ann_solver(
-      sa_ann_policy, 1000);
+  ailib::IterativeSolver<ailib::Puzzle8, decltype(sa_ann_policy)> sa_ann_solver(
+      sa_ann_policy, 500);
 
   auto sa_ann_result = sa_ann_solver.search(problem);
   bool sa_ann_perfect = problem.is_goal(sa_ann_result.final_state);
@@ -81,6 +87,10 @@ int main(int argc, char **argv) {
   std::cout << "Soluzione Perfetta: " << (sa_ann_perfect ? "SI" : "NO") << "\n";
   std::cout << "Punteggio Finale: " << sa_ann_result.score << "\n";
   std::cout << "Iterazioni: " << sa_ann_result.iterations << "\n";
+  if (sa_ann_perfect) {
+    std::cout << "Soluzione:\n";
+    problem.print_state(sa_ann_result.final_state);
+  }
 
   // ===== CONFRONTO =====
   std::cout << "\n" << std::string(50, '=') << "\n";

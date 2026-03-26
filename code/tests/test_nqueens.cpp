@@ -2,10 +2,10 @@
 #include <iostream>
 #include <vector>
 
-#include "SolverFactory.hpp"
-#include "policies/SimulatedAnnealingPolicy.hpp"
-#include "policies/SteepestAscentPolicy.hpp"
-#include "problems/NQueens.hpp"
+#include "../SolverFactory.hpp"
+#include "../policies/SimulatedAnnealingPolicy.hpp"
+#include "../policies/SteepestAscentPolicy.hpp"
+#include "../problems/NQueens.hpp"
 
 int main(int argc, char **argv) {
   int N;
@@ -35,6 +35,10 @@ int main(int argc, char **argv) {
   std::cout << "Punteggio Finale: " << fc_result.best.score << "\n";
   std::cout << "Iterazioni: " << fc_result.total_iterations << "\n";
   std::cout << "Restart: " << fc_result.restarts_executed << "\n";
+  if (fc_perfect) {
+    std::cout << "Soluzione:\n";
+    problem.print_state(fc_result.best.final_state);
+  }
 
   // ===== STEEPEST ASCENT =====
   std::cout << "\n" << std::string(50, '=') << "\n";
@@ -58,6 +62,10 @@ int main(int argc, char **argv) {
   std::cout << "Punteggio Finale: " << sa_result.best.score << "\n";
   std::cout << "Iterazioni Totali: " << sa_result.total_iterations << "\n";
   std::cout << "Restart: " << sa_result.restarts_executed << "\n";
+  if (sa_perfect) {
+    std::cout << "Soluzione:\n";
+    problem.print_state(sa_result.best.final_state);
+  }
 
   // ===== SIMULATED ANNEALING =====
   std::cout << "\n" << std::string(50, '=') << "\n";
@@ -81,6 +89,10 @@ int main(int argc, char **argv) {
   std::cout << "Soluzione Perfetta: " << (sa_ann_perfect ? "SI" : "NO") << "\n";
   std::cout << "Punteggio Finale: " << sa_ann_result.score << "\n";
   std::cout << "Iterazioni: " << sa_ann_result.iterations << "\n";
+  if (sa_ann_perfect) {
+    std::cout << "Soluzione:\n";
+    problem.print_state(sa_ann_result.final_state);
+  }
 
   // ===== CONFRONTO =====
   std::cout << "\n" << std::string(50, '=') << "\n";

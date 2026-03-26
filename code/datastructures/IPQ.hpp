@@ -18,19 +18,19 @@
 
 namespace ailib {
     template <typename S, typename A, typename P>
-    requires(std::predicate<P, SearchNode<S, A>*, SearchNode<S, A>*>) // P is a NodePtr comparator function
+    requires(std::predicate<P, SearchNode<S, A>*, SearchNode<S, A>*>)
     class IPQ {
     private:
         using NodePtr = SearchNode<S, A>*;
 
         P compare_nodes;
-        std::vector<NodePtr> data;                          // Heap storage
-        std::unordered_map<NodePtr, std::size_t> index_map; // node -> index in data_
+        std::vector<NodePtr> data;
+        std::unordered_map<S, std::size_t> index_map;
 
         void swap_nodes(std::size_t i, std::size_t j) {
             std::swap(data[i], data[j]);
-            index_map[data[i]] = i;
-            index_map[data[j]] = j;
+            index_map[data[i]->state] = i;
+            index_map[data[j]->state] = j;
         }
 
         void sift_up(std::size_t index) {
@@ -68,11 +68,11 @@ namespace ailib {
         explicit IPQ(P comp_func) : compare_nodes(std::move(comp_func)) {}
 
         // Build heap from an existing vector in O(n)
-        explicit IPQ(std::vector<NodePtr> init, P comp_func = P{})
+        explicit IPQ(std::vector<NodePtr> init, P comp_func)
             : compare_nodes(std::move(comp_func)), data(std::move(init)) {
             
             for (std::size_t i = 0; i < data.size(); ++i)
-                index_map[data[i]] = i;
+                index_map[data[i]->state] = i;
                 
             if (!data.empty())
                 for (std::size_t i = data.size() / 2; i > 0; --i)
@@ -80,13 +80,27 @@ namespace ailib {
         }
 
         void add(NodePtr node) {
-            index_map[node] = data.size();
-            data.push_back(node);
-            sift_up(data.size() - 1);
+            if (node == nullptr) return;
+
+            auto it = index_map.find(node->state);
+            if (it == index_map.end()) {
+                index_map[node->state] = data.size();
+                data.push_back(node);
+                sift_up(data.size() - 1);
+                return;
+            }
+
+            const std::size_t idx = it->second;
+            NodePtr current = data[idx];
+
+            if (compare_nodes(current, node)) {
+                data[idx] = node;
+                sift_up(idx);
+            }
         }
 
-        bool contains(const NodePtr& node) const {
-            return index_map.count(node) > 0;
+        bool contains(const S& state) const {
+            return index_map.count(state) > 0;
         }
 
         NodePtr top() const {
@@ -98,7 +112,7 @@ namespace ailib {
             if (data.empty()) return;
 
             NodePtr best = data.front();
-            index_map.erase(best);
+            index_map.erase(best->state);
 
             if (data.size() == 1) {
                 data.pop_back();
@@ -108,15 +122,18 @@ namespace ailib {
             // Move last element to root, then restore heap
             data.front() = std::move(data.back());
             data.pop_back();
-            index_map[data.front()] = 0;
+            index_map[data.front()->state] = 0;
             sift_down(0);
         }
 
         // Call after decreasing node->path_cost to restore heap order
-        void update(const NodePtr& node) {
-            auto it = index_map.find(node);
-            if (it != index_map.end())
-                sift_up(it->second);
+        void update(const S& state) {
+            auto it = index_map.find(state);
+            if (it == index_map.end()) return;
+
+            std::size_t idx = it->second;
+            sift_up(idx);
+            sift_down(idx);
         }
 
         bool empty() const { return data.empty(); }
