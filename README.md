@@ -1,6 +1,6 @@
 # AIlib - C++20 Solver Framework
 
-C++20 template-based library for implementing and benchmarking GOFAI algorithms. Uses concept constraints for compile-time type checking and zero-overhead abstractions.
+C++20 template-based framework for implementing and benchmarking GOFAI algorithms. Uses concept constraints for compile-time type checking and zero-overhead abstractions.
 
 ## Structure
 
@@ -32,3 +32,9 @@ make test_p8   # Run Puzzle8 benchmark
 ## Requirements
 
 C++20 compiler
+
+## License
+
+Copyright © 2026 Vincenzo Di Carlo
+
+This project is licensed under the GNU General Public License v3.0 - see [LICENSE](LICENSE) file.

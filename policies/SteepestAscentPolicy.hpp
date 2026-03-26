@@ -22,7 +22,7 @@ public:
     auto best_state = ws.state;
     bool improvement_found = false;
 
-    // Evaluate ALL actions
+    // Evaluate all actions
     for (const auto &action : actions) {
       auto transition = problem.get_result(ws.state, action);
       double new_score = this->fitness(transition.next_state);
