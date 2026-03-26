@@ -13,13 +13,11 @@ private:
   int max_iterations;
 
 public:
-  using ResultTracker =
-      DefaultIterativeTracker<P, PO>; // Declare result tracker type
+  using ResultTracker = DefaultIterativeTracker<P, PO>;
 
   explicit IterativeSolver(PO p, int max_iterations = 10000000)
       : policy(p), max_iterations(max_iterations) {};
 
-  // Search method with tracker that conforms to IterativeTracker concept
   template <IterativeTracker<P, PO> Tracker = ResultTracker>
   Tracker search(const P &problem, Tracker tracker = Tracker{}) {
 

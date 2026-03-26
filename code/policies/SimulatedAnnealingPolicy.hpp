@@ -63,7 +63,7 @@ public:
       return;
     }
 
-    // consider pejorative moves based on probability over time
+    // consider pejorative moves based on decreasing probability over time
     double delta = new_score - ws.score;
     double p_accept = std::exp(delta / temperature);
 
