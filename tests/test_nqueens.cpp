@@ -1,6 +1,5 @@
 #include <iomanip>
 #include <iostream>
-#include <vector>
 
 #include "../SolverFactory.hpp"
 #include "../policies/SimulatedAnnealingPolicy.hpp"
